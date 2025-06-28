@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-api-mgt-deployment
+  labels:
+    app: tenant-api-mgt
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tenant-api-mgt
+  template:
+    metadata:
+      labels:
+        app: tenant-api-mgt
+    spec:
+      imagePullSecrets:
+        - name: ned
+      containers:
+        - name: tenant-api-mgt
+          image: 971422695522.dkr.ecr.ap-south-1.amazonaws.com/inventory/tenant-mgt-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5003

@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:postgres@localhost:5432/postgres"
+}
+-- Tenants table: represents each company
+CREATE TABLE tenants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  trial_starts_at TIMESTAMPTZ,
+  trial_ends_at TIMESTAMPTZ,
+  plan TEXT DEFAULT 'free'
+);
+
+-- Users table: linked to a tenant
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  email TEXT UNIQUE NOT NULL,
+  role TEXT DEFAULT 'admin', 
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Feature flags per tenant (optional)
+CREATE TABLE features (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  feature_key TEXT NOT NULL,
+  enabled BOOLEAN DEFAULT false,
+  UNIQUE (tenant_id, feature_key)
+);
+
+-- Plans table (optional, if plans are dynamic)
+CREATE TABLE plans (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE,
+  price NUMERIC,
+  features JSONB -- e.g., { "export": true, "reports": false }
+);
+
+-- Subscriptions (if you’re managing payments/trials)
+CREATE TABLE subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  plan_id INTEGER REFERENCES plans(id),
+  is_active BOOLEAN DEFAULT true,
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  trial BOOLEAN DEFAULT false
+);
