@@ -15,9 +15,12 @@
   "devDependencies": {
     "@prisma/client": "^6.10.1",
     "@types/node": "^24.0.6",
-    "dotenv": "^17.0.0",
+    "@types/pg": "^8.15.4",
+    "dotenv": "^17.0.1",
+    "node-pg-migrate": "^8.0.3",
     "prisma": "^6.10.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "pg": "^8.16.3"
   }
 }

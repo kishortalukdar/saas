@@ -18,9 +18,9 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-app.listen(5001,()=>{
-    console.log("server is running ");
-})
+app.listen(process.env.SERVER_PORT, () => {
+    console.log(`Server running on http://localhost:${process.env.SERVER_PORT}`);
+});
 
 
   

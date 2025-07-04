@@ -7,68 +7,73 @@ datasource db {
   url      = "postgresql://postgres:postgres@localhost:5432/postgres"
 }
 
-CREATE TABLE admin_users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL, -- hashed
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+model AdminUser {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  created_at DateTime @default(now())
+}
 
+/* model Tenant {
+  id          String      @id @default(uuid())
+  company_name String
+  gstin_no     Float?     // or use Decimal if needed
+  is_active    Boolean    @default(true)
+  plan_id      String?
+  plan         Plan?      @relation(fields: [plan_id], references: [id])
+  created_at   DateTime   @default(now())
+  users        User[]
+  subscriptions Subscription[]
+}
 
--- Tenants table: represents each company
-CREATE TABLE tenants (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_name TEXT NOT NULL, 
-  gstin_no NUMERIC, 
-  is_active BOOLEAN DEFAULT TRUE,
-  plan_id UUID REFERENCES plans(id),
-  created_at TIMESTAMPTZ DEFAULT now(),
-);
+model User {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  tenant     Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  email      String   @unique
+  role       String   @default("admin")
+  created_at DateTime @default(now())
+}
 
--- Users table: linked to a tenant
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  email TEXT UNIQUE NOT NULL,
-  role TEXT DEFAULT 'admin', 
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+model Plan {
+  id             String          @id @default(uuid())
+  name           String          @unique
+  price          Decimal         @default(0.00)
+  billing_cycle  String          @default("monthly")
+  is_free        Boolean         @default(false)
+  tenants        Tenant[]
+  plan_features  PlanFeature[]
+}
 
--- Plans table (optional, if plans are dynamic)
-CREATE TABLE plans (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT UNIQUE NOT NULL,
-  price NUMERIC(10, 2) NOT NULL DEFAULT 0,
-  billing_cycle TEXT CHECK (billing_cycle IN ('monthly', 'yearly')) NOT NULL DEFAULT 'monthly',
-  is_free BOOLEAN DEFAULT FALSE
-);
+model Feature {
+  id          String         @id @default(uuid())
+  code        String         @unique
+  description String?
+  plan_features PlanFeature[]
+}
 
+model PlanFeature {
+  id         String   @id @default(uuid())
+  plan_id    String
+  feature_id String
+  enabled    Boolean  @default(false)
+  value      String?
 
+  plan    Plan    @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  feature Feature @relation(fields: [feature_id], references: [id], onDelete: Cascade)
 
--- Feature flags per tenant (optional)
-CREATE TABLE features (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code TEXT NOT NULL UNIQUE,         -- e.g., 'export', 'reports'
-  description TEXT
-);
+  @@unique([plan_id, feature_id])
+}
 
-CREATE TABLE plan_features (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  plan_id UUID REFERENCES plans(id) ON DELETE CASCADE,
-  feature_id UUID REFERENCES features(id) ON DELETE CASCADE,
-  enabled BOOLEAN DEFAULT false,
-  value TEXT, -- Optional: for limits like "10 users"
-  UNIQUE (plan_id, feature_id)
-);
+model Subscription {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  plan_id      String?
+  is_active    Boolean   @default(true)
+  trial_start  DateTime?
+  trial_end    DateTime?
+  subscribed_at DateTime @default(now())
 
-
--- Subscriptions (if you’re managing payments/trials)
-CREATE TABLE subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  plan_id INTEGER REFERENCES plans(id),
-  is_active BOOLEAN DEFAULT true,
-  trial_start TIMESTAMPTZ,
-  trial_end TIMESTAMPTZ,
-  subscribed_at TIMESTAMPTZ DEFAULT now()
-);
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  plan   Plan?  @relation(fields: [plan_id], references: [id])
+}*/
