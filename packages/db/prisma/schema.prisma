@@ -8,13 +8,37 @@ datasource db {
 }
 
 model AdminUser {
-  id         String   @id @default(uuid())
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String   @unique
   password   String
   created_at DateTime @default(now())
 }
 
-/* model Tenant {
+model Tenant {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_name  String   @unique
+  gst_no        String?
+  user_id       String   @unique @db.Uuid
+  user          User     @relation("UserTenant", fields: [user_id], references: [id], onDelete: SetNull)
+  created_at    DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+  phoneNo   BigInt   @unique
+  is_active Boolean  @default(false)
+  tenant    Tenant?  @relation("UserTenant")  // 👈 reverse side of the relation
+  created_at DateTime @default(now())
+}
+
+
+
+
+/* 
+
+
+model Tenant {
   id          String      @id @default(uuid())
   company_name String
   gstin_no     Float?     // or use Decimal if needed
@@ -26,14 +50,6 @@ model AdminUser {
   subscriptions Subscription[]
 }
 
-model User {
-  id         String   @id @default(uuid())
-  tenant_id  String
-  tenant     Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  email      String   @unique
-  role       String   @default("admin")
-  created_at DateTime @default(now())
-}
 
 model Plan {
   id             String          @id @default(uuid())

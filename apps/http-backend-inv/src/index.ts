@@ -18,6 +18,12 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
+
+import userRoute from './user/routes/user.routes'
+import tenentRoute from './user/routes/tenent.routes'
+app.use('/api/user',userRoute)
+app.use('/api/tenent',tenentRoute)
+
 app.listen(process.env.SERVER_PORT, () => {
     console.log(`Server running on http://localhost:${process.env.SERVER_PORT}`);
 });
