@@ -9,9 +9,15 @@ datasource db {
 
 model AdminUser {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email      String   @unique
-  password   String
+  user_name           String   @unique
+  password            String   @unique
+  phoneNo   BigInt    @unique
+  is_active Boolean   @default(false)
   created_at DateTime @default(now())
+
+  plans        Plan[]
+  features     Feature[]
+  planFeatures PlanFeature[]
 }
 
 model Tenant {
@@ -31,65 +37,53 @@ model User {
   tenant    Tenant?  @relation("UserTenant")  // 👈 reverse side of the relation
   created_at DateTime @default(now())
 }
-
-
-
-
-/* 
-
-
-model Tenant {
-  id          String      @id @default(uuid())
-  company_name String
-  gstin_no     Float?     // or use Decimal if needed
-  is_active    Boolean    @default(true)
-  plan_id      String?
-  plan         Plan?      @relation(fields: [plan_id], references: [id])
-  created_at   DateTime   @default(now())
-  users        User[]
-  subscriptions Subscription[]
-}
-
-
 model Plan {
-  id             String          @id @default(uuid())
-  name           String          @unique
-  price          Decimal         @default(0.00)
-  billing_cycle  String          @default("monthly")
-  is_free        Boolean         @default(false)
-  tenants        Tenant[]
-  plan_features  PlanFeature[]
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String         @unique
+  price          Decimal        @default(0.00)
+  billing_cycle  String         @default("monthly")
+  is_free        Boolean        @default(false)
+  created_at     DateTime       @default(now())
+  planFeatures   PlanFeature[]
+  admin_user_id  String       @db.Uuid
+  admin_user     AdminUser    @relation(fields: [admin_user_id], references: [id], onDelete: SetNull)
 }
 
 model Feature {
-  id          String         @id @default(uuid())
-  code        String         @unique
-  description String?
-  plan_features PlanFeature[]
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code           String       @unique
+  description    String?
+  created_at     DateTime     @default(now())
+  planFeatures   PlanFeature[]
+
+  admin_user_id  String       @db.Uuid
+  admin_user     AdminUser    @relation(fields: [admin_user_id], references: [id], onDelete: SetNull)
 }
 
 model PlanFeature {
-  id         String   @id @default(uuid())
-  plan_id    String
-  feature_id String
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plan_id    String   @db.Uuid
+  feature_id String   @db.Uuid
   enabled    Boolean  @default(false)
-  value      String?
 
-  plan    Plan    @relation(fields: [plan_id], references: [id], onDelete: Cascade)
-  feature Feature @relation(fields: [feature_id], references: [id], onDelete: Cascade)
+  plan       Plan     @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+  feature    Feature  @relation(fields: [feature_id], references: [id], onDelete: Cascade)
 
   @@unique([plan_id, feature_id])
+  admin_user_id  String       @db.Uuid
+  admin_user     AdminUser    @relation(fields: [admin_user_id], references: [id], onDelete: SetNull)
 }
 
+
+
 model Subscription {
-  id           String    @id @default(uuid())
-  tenant_id    String
-  plan_id      String?
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   is_active    Boolean   @default(true)
   trial_start  DateTime?
   trial_end    DateTime?
   subscribed_at DateTime @default(now())
 
-  tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  plan   Plan?  @relation(fields: [plan_id], references: [id])
-}*/
+  plan_id       String       @db.Uuid
+  user_id       String       @db.Uuid
+  
+}
